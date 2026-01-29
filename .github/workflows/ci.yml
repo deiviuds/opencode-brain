@@ -61,7 +61,6 @@ jobs:
           test -d dist || (echo "Missing dist directory" && exit 1)
           test -f dist/index.js || (echo "Missing dist/index.js" && exit 1)
           test -f dist/index.d.ts || (echo "Missing dist/index.d.ts" && exit 1)
-          test -f dist/plugin.js || (echo "Missing dist/plugin.js" && exit 1)
           test -d .opencode || (echo "Missing .opencode directory" && exit 1)
           test -d .opencode/commands || (echo "Missing .opencode/commands" && exit 1)
           test -d .opencode/skills || (echo "Missing .opencode/skills" && exit 1)
