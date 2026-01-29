@@ -9,7 +9,7 @@
 [![Build Status](https://github.com/deiviuds/opencode-brain/workflows/CI/badge.svg)](https://github.com/deiviuds/opencode-brain/actions)
 
 **Share memories between OpenCode and Claude Code.**  
-Using [claude-brain](https://github.com/memvid/claude-brain).
+Using [claude-brain](https://github.com/memvid/claude-brain) and [Memvid](https://github.com/memvid/memvid).
 
 **[Install in 30 seconds](#installation)** · [How it Works](#how-it-works) · [Commands](#commands) · [FAQ](#faq)
 
