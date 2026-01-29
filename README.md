@@ -8,7 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://github.com/deiviuds/opencode-brain/workflows/CI/badge.svg)](https://github.com/deiviuds/opencode-brain/actions)
 
-**Compatible with Claude Code** - shares the same `.claude/mind.mv2` file.
+**Persistent memory using Memvid, compatible with Claude Code (claude-brain)**
 
 **[Install in 30 seconds](#installation)** · [How it Works](#how-it-works) · [Commands](#commands) · [FAQ](#faq)
 

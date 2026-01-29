@@ -1,7 +1,7 @@
 {
   "name": "opencode-brain",
   "version": "1.0.0",
-  "description": "Give OpenCode photographic memory in ONE portable file - shared with Claude Code",
+  "description": "Persistent memory using Memvid, compatible with Claude Code (claude-brain)",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
