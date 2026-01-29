@@ -21,21 +21,25 @@ export function createSearchTool(getMind: () => Promise<Mind>): ToolDefinition {
     async execute(args, ctx: ToolContext) {
       if (ctx.abort.aborted) return "Operation cancelled"
       
-      ctx.metadata({ title: "Searching memories..." })
-      
-      const mind = await getMind()
-      const results = await mind.search(args.query, args.limit ?? 10)
-      
-      if (results.length === 0) return "No memories found."
-      
-      ctx.metadata({ title: `Found ${results.length} memories` })
-      
-      return results.map((r, i) => {
-        const source = (r.observation.metadata?.source as string) || "unknown"
-        return `${i + 1}. [${r.observation.type}] ${r.observation.summary}\n` +
-          `   Score: ${r.score.toFixed(2)} | ${formatTimestamp(r.observation.timestamp)} | via ${source}\n` +
-          `   ${r.snippet}`
-      }).join("\n\n")
+      try {
+        ctx.metadata({ title: "Searching memories..." })
+        
+        const mind = await getMind()
+        const results = await mind.search(args.query, args.limit ?? 10)
+        
+        if (results.length === 0) return "No memories found."
+        
+        ctx.metadata({ title: `Found ${results.length} memories` })
+        
+        return results.map((r, i) => {
+          const source = (r.observation.metadata?.source as string) || "unknown"
+          return `${i + 1}. [${r.observation.type}] ${r.observation.summary}\n` +
+            `   Score: ${r.score.toFixed(2)} | ${formatTimestamp(r.observation.timestamp)} | via ${source}\n` +
+            `   ${r.snippet}`
+        }).join("\n\n")
+      } catch (err) {
+        return `Failed to search memories: ${err instanceof Error ? err.message : String(err)}`
+      }
     },
   })
 }
@@ -52,14 +56,18 @@ export function createAskTool(getMind: () => Promise<Mind>): ToolDefinition {
     async execute(args, ctx: ToolContext) {
       if (ctx.abort.aborted) return "Operation cancelled"
       
-      ctx.metadata({ title: "Querying memories..." })
-      
-      const mind = await getMind()
-      const answer = await mind.ask(args.question)
-      
-      ctx.metadata({ title: "Query complete" })
-      
-      return answer
+      try {
+        ctx.metadata({ title: "Querying memories..." })
+        
+        const mind = await getMind()
+        const answer = await mind.ask(args.question)
+        
+        ctx.metadata({ title: "Query complete" })
+        
+        return answer
+      } catch (err) {
+        return `Failed to ask question: ${err instanceof Error ? err.message : String(err)}`
+      }
     },
   })
 }
@@ -74,27 +82,31 @@ export function createStatsTool(getMind: () => Promise<Mind>): ToolDefinition {
     async execute(_args, ctx: ToolContext) {
       if (ctx.abort.aborted) return "Operation cancelled"
       
-      ctx.metadata({ title: "Loading statistics..." })
-      
-      const mind = await getMind()
-      const stats = await mind.stats()
-      
-      ctx.metadata({ title: "Statistics loaded" })
-      
-      const lines = [
-        `Memory: .claude/mind.mv2 (shared with Claude Code)`,
-        `Total Observations: ${stats.totalObservations}`,
-        `File Size: ${(stats.fileSize / 1024).toFixed(1)} KB`,
-        `Oldest Memory: ${formatTimestamp(stats.oldestMemory)}`,
-        `Newest Memory: ${formatTimestamp(stats.newestMemory)}`,
-      ]
-      
-      const types = Object.entries(stats.topTypes)
-      if (types.length > 0) {
-        lines.push(`Top Types: ${types.map(([k, v]) => `${k}:${v}`).join(", ")}`)
+      try {
+        ctx.metadata({ title: "Loading statistics..." })
+        
+        const mind = await getMind()
+        const stats = await mind.stats()
+        
+        ctx.metadata({ title: "Statistics loaded" })
+        
+        const lines = [
+          `Memory: .claude/mind.mv2 (shared with Claude Code)`,
+          `Total Observations: ${stats.totalObservations}`,
+          `File Size: ${(stats.fileSize / 1024).toFixed(1)} KB`,
+          `Oldest Memory: ${formatTimestamp(stats.oldestMemory)}`,
+          `Newest Memory: ${formatTimestamp(stats.newestMemory)}`,
+        ]
+        
+        const types = Object.entries(stats.topTypes)
+        if (types.length > 0) {
+          lines.push(`Top Types: ${types.map(([k, v]) => `${k}:${v}`).join(", ")}`)
+        }
+        
+        return lines.join("\n")
+      } catch (err) {
+        return `Failed to load statistics: ${err instanceof Error ? err.message : String(err)}`
       }
-      
-      return lines.join("\n")
     },
   })
 }
@@ -111,21 +123,25 @@ export function createTimelineTool(getMind: () => Promise<Mind>): ToolDefinition
     async execute(args, ctx: ToolContext) {
       if (ctx.abort.aborted) return "Operation cancelled"
       
-      ctx.metadata({ title: "Loading timeline..." })
-      
-      const mind = await getMind()
-      const context = await mind.getContext()
-      const obs = context.recentObservations.slice(0, args.count ?? 10)
-      
-      ctx.metadata({ title: `Loaded ${obs.length} memories` })
-      
-      if (obs.length === 0) return "No memories found."
-      
-      return obs.map((o, i) => {
-        const source = (o.metadata?.source as string) || "unknown"
-        return `${i + 1}. [${o.type}] ${o.summary}\n` +
-          `   ${formatTimestamp(o.timestamp)} | ${o.tool || "N/A"} | via ${source}`
-      }).join("\n\n")
+      try {
+        ctx.metadata({ title: "Loading timeline..." })
+        
+        const mind = await getMind()
+        const context = await mind.getContext()
+        const obs = context.recentObservations.slice(0, args.count ?? 10)
+        
+        ctx.metadata({ title: `Loaded ${obs.length} memories` })
+        
+        if (obs.length === 0) return "No memories found."
+        
+        return obs.map((o, i) => {
+          const source = (o.metadata?.source as string) || "unknown"
+          return `${i + 1}. [${o.type}] ${o.summary}\n` +
+            `   ${formatTimestamp(o.timestamp)} | ${o.tool || "N/A"} | via ${source}`
+        }).join("\n\n")
+      } catch (err) {
+        return `Failed to load timeline: ${err instanceof Error ? err.message : String(err)}`
+      }
     },
   })
 }
