@@ -440,4 +440,3 @@ Built with ❤️ for the OpenCode community
 **Related:** [claude-brain](https://github.com/memvid/claude-brain) - The original for Claude Code
 
 </div>
-
