@@ -135,6 +135,7 @@ export async function handleToolCapture(
       ...(output.metadata || {}),
       compressed: wasCompressed,
       originalSize: wasCompressed ? originalSize : undefined,
+      source: "opencode",
     },
   })
   

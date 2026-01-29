@@ -4,17 +4,9 @@
  * Native OpenCode tools for interacting with the memory system.
  */
 
-import { tool, type ToolDefinition } from "@opencode-ai/plugin"
+import { tool, type ToolDefinition, type ToolContext } from "@opencode-ai/plugin"
 import type { Mind } from "../core/mind.js"
 import { formatTimestamp } from "../utils/helpers.js"
-
-// Tool context type
-interface ToolContext {
-  directory: string
-  worktree: string
-  abort: AbortSignal
-  metadata(input: { title?: string; metadata?: Record<string, unknown> }): void
-}
 
 /**
  * Create mind_search tool

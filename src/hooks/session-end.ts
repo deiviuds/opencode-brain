@@ -7,6 +7,14 @@
 import type { Mind } from "../core/mind.js"
 import { debug } from "../utils/helpers.js"
 
+// BunShell type from OpenCode plugin context
+interface BunShell {
+  (strings: TemplateStringsArray, ...values: unknown[]): {
+    cwd(dir: string): { text(): Promise<string> }
+    text(): Promise<string>
+  }
+}
+
 const MIN_OBSERVATIONS_FOR_SUMMARY = 3
 
 // File patterns for find
@@ -18,13 +26,6 @@ const FILE_EXTENSIONS = [
 
 // Important files that get individual entries
 const IMPORTANT_FILE_PATTERN = /^(README|CHANGELOG|package\.json|Cargo\.toml|\.env)/i
-
-interface BunShell {
-  (strings: TemplateStringsArray, ...values: unknown[]): {
-    cwd(dir: string): { text(): Promise<string> }
-    text(): Promise<string>
-  }
-}
 
 /**
  * Handle session end
@@ -94,7 +95,7 @@ async function captureFileChanges(
     try {
       const extPattern = FILE_EXTENSIONS.map(e => `-name "${e}"`).join(" -o ")
       const recent = await $`find . -maxdepth 4 -type f \( ${extPattern} \) -mmin -30 ! -path "*/node_modules/*" ! -path "*/.git/*" ! -path "*/dist/*" ! -path "*/build/*" ! -path "*/.next/*" ! -path "*/target/*" 2>/dev/null | head -30`.cwd(directory).text()
-      const recentFiles = recent.trim().split("\n").filter(Boolean).map(f => f.replace(/^\.\//, ""))
+      const recentFiles = recent.trim().split("\n").filter(Boolean).map((f: string) => f.replace(/^\.\//, ""))
       
       for (const file of recentFiles) {
         if (!allFiles.includes(file)) {
@@ -134,6 +135,7 @@ async function captureFileChanges(
         files: uniqueFiles,
         fileCount: uniqueFiles.length,
         captureMethod: "git-diff-plus-recent",
+        source: "opencode",
       },
     })
     
@@ -149,6 +151,7 @@ async function captureFileChanges(
           metadata: {
             files: [file],
             fileName,
+            source: "opencode",
           },
         })
         debug(`Stored individual edit: ${fileName}`)
