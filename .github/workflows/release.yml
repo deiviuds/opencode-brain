@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Run tests
+        run: npm test
+
+      - name: Verify plugin structure
+        run: |
+          test -f dist/index.js
+          test -f dist/plugin.js
+          test -d .opencode/commands
+          test -d .opencode/skills
+          test -f opencodeBrain-banner.png
+
+      - name: Publish to npm
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+          body: |
+            ## Installation
+
+            ```bash
+            npm install opencode-brain
+            ```
+
+            Add to your `opencode.json`:
+            ```json
+            {
+              "plugin": ["opencode-brain"]
+            }
+            ```
+
+            ## What's New
+
+            See [CHANGELOG.md](https://github.com/deiviuds/opencode-brain/blob/main/CHANGELOG.md) for details.
+
+            ## Documentation
+
+            - [README](https://github.com/deiviuds/opencode-brain#readme)
+            - [Contributing Guide](https://github.com/deiviuds/opencode-brain/blob/main/CONTRIBUTING.md)
+
+            ## Cross-Tool Compatibility
+
+            This plugin is 100% compatible with [claude-brain](https://github.com/memvid/claude-brain).
+            Both tools share the same `.claude/mind.mv2` file.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
