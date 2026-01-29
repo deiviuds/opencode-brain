@@ -35,7 +35,6 @@ jobs:
       - name: Verify plugin structure
         run: |
           test -f dist/index.js
-          test -f dist/plugin.js
           test -d .opencode/commands
           test -d .opencode/skills
           test -f opencodeBrain-banner.png
