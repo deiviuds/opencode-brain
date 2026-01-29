@@ -115,15 +115,16 @@ export async function handleToolCapture(
     effectiveOutput = `File modified: ${fileName}\nPath: ${filePath}\nTool: ${toolName}`
   }
   
-  // Compress
+  // Store with source attribution
+  const mind = await getMind()
+  
+  // Compress (respecting config)
   const { compressed, wasCompressed, originalSize } = compressToolOutput(
     toolName,
     output.metadata,
-    effectiveOutput
+    effectiveOutput,
+    mind.getConfig().autoCompress
   )
-  
-  // Store with source attribution
-  const mind = await getMind()
   const type = classifyObservationType(toolName, compressed)
   
   await mind.remember({

@@ -77,4 +77,19 @@ ${"x".repeat(3000)}
     expect(result.wasCompressed).toBe(true)
     expect(result.compressed).toContain("Pattern:")
   })
+
+  it("respects autoCompress=false config", () => {
+    const largeOutput = "x".repeat(5000)
+    const result = compressToolOutput("read", { file: "test.ts" }, largeOutput, false)
+    expect(result.wasCompressed).toBe(false)
+    expect(result.compressed).toBe(largeOutput)
+    expect(result.originalSize).toBe(5000)
+  })
+
+  it("compresses when autoCompress=true", () => {
+    const largeOutput = "x".repeat(5000)
+    const result = compressToolOutput("read", { file: "test.ts" }, largeOutput, true)
+    expect(result.wasCompressed).toBe(true)
+    expect(result.compressed.length).toBeLessThan(largeOutput.length)
+  })
 })

@@ -14,11 +14,13 @@ const COMPRESSION_THRESHOLD = 3000    // Only compress if larger
 export function compressToolOutput(
   toolName: string,
   toolInput: Record<string, unknown> | undefined,
-  output: string
+  output: string,
+  autoCompress = true
 ): { compressed: string; wasCompressed: boolean; originalSize: number } {
   const originalSize = output.length
   
-  if (originalSize < COMPRESSION_THRESHOLD) {
+  // Respect autoCompress config
+  if (!autoCompress || originalSize < COMPRESSION_THRESHOLD) {
     return { compressed: output, wasCompressed: false, originalSize }
   }
   

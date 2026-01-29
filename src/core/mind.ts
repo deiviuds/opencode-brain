@@ -95,12 +95,14 @@ export class Mind {
   private sessionId: string
   private directory: string
   private initialized = false
+  private sessionStartTime: number
 
   private constructor(memvid: Memvid, config: MindConfig, directory: string) {
     this.memvid = memvid
     this.config = config
     this.directory = directory
     this.sessionId = generateId()
+    this.sessionStartTime = Date.now()
   }
 
   /**
@@ -318,11 +320,17 @@ export class Mind {
     filesModified: string[]
     summary: string
   }): Promise<string> {
+    // Get actual observation count for this session
+    const context = await this.getContext()
+    const sessionObs = context.recentObservations.filter(
+      obs => obs.metadata?.sessionId === this.sessionId
+    )
+    
     const sessionSummary: SessionSummary = {
       id: this.sessionId,
-      startTime: Date.now() - 3600000,
+      startTime: this.sessionStartTime,
       endTime: Date.now(),
-      observationCount: 0,
+      observationCount: sessionObs.length,
       keyDecisions: summary.keyDecisions,
       filesModified: summary.filesModified,
       summary: summary.summary,
@@ -348,6 +356,13 @@ export class Mind {
   async stats(): Promise<MindStats> {
     return this.withLock(async () => {
       const stats = await this.memvid.stats()
+      
+      // Get all frames for type aggregation
+      // Limit to 1000 to avoid performance issues on large memories
+      const allTimeline = await this.memvid.timeline({ limit: 1000, reverse: true })
+      const allFrames = Array.isArray(allTimeline) ? allTimeline : (allTimeline.frames || [])
+      
+      // Get oldest and newest for timestamps
       const timeline = await this.memvid.timeline({ limit: 1, reverse: false })
       const recentTimeline = await this.memvid.timeline({ limit: 1, reverse: true })
       
@@ -359,13 +374,40 @@ export class Mind {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const newest = newestFrames[0] as any
       
+      // Count sessions and aggregate types
+      let totalSessions = 0
+      const topTypes: Partial<Record<ObservationType, number>> = {}
+      
+      // Valid observation types (not session summaries)
+      const validTypes = new Set<string>([
+        "discovery", "decision", "problem", "solution", "pattern",
+        "warning", "success", "refactor", "bugfix", "feature"
+      ])
+      
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      for (const frame of allFrames as any[]) {
+        const label = frame.label
+        
+        // Count sessions
+        if (label === "session") {
+          totalSessions++
+          continue
+        }
+        
+        // Aggregate observation types
+        if (label && validTypes.has(label)) {
+          const type = label as ObservationType
+          topTypes[type] = (topTypes[type] || 0) + 1
+        }
+      }
+      
       return {
         totalObservations: (stats.frame_count as number) || 0,
-        totalSessions: 0,
+        totalSessions,
         oldestMemory: normalizeTimestamp(oldest?.metadata?.timestamp || oldest?.timestamp || 0),
         newestMemory: normalizeTimestamp(newest?.metadata?.timestamp || newest?.timestamp || 0),
         fileSize: (stats.size_bytes as number) || 0,
-        topTypes: {},
+        topTypes,
       }
     })
   }
@@ -376,6 +418,10 @@ export class Mind {
 
   getMemoryPath(): string {
     return resolve(this.directory, this.config.memoryPath)
+  }
+
+  getConfig(): MindConfig {
+    return this.config
   }
 
   isInitialized(): boolean {
