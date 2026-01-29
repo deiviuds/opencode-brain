@@ -4,11 +4,12 @@
 
 ### Give OpenCode photographic memory in ONE portable file.
 
-[![npm version](https://badge.fury.io/js/opencode-brain.svg)](https://www.npmjs.com/package/opencode-brain)
+[![npm version](https://img.shields.io/npm/v/opencode-brain.svg)](https://www.npmjs.com/package/opencode-brain)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://github.com/deiviuds/opencode-brain/workflows/CI/badge.svg)](https://github.com/deiviuds/opencode-brain/actions)
 
-**Share memories between OpenCode and Claude Code** - Using [claude-brain](https://github.com/memvid/claude-brain).
+**Share memories between OpenCode and Claude Code.**  
+Using [claude-brain](https://github.com/memvid/claude-brain).
 
 **[Install in 30 seconds](#installation)** · [How it Works](#how-it-works) · [Commands](#commands) · [FAQ](#faq)
 
