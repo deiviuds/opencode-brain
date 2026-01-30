@@ -49,6 +49,10 @@ jobs:
         with:
           generate_release_notes: true
           body: |
+            ## What's New
+
+            See [CHANGELOG.md](https://github.com/deiviuds/opencode-brain/blob/main/CHANGELOG.md) for details.
+
             ## Installation
 
             ```bash
@@ -61,10 +65,6 @@ jobs:
               "plugin": ["opencode-brain"]
             }
             ```
-
-            ## What's New
-
-            See [CHANGELOG.md](https://github.com/deiviuds/opencode-brain/blob/main/CHANGELOG.md) for details.
 
             ## Documentation
 
