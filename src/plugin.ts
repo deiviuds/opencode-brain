@@ -12,6 +12,8 @@ import { getMind, resetMind } from "./core/mind.js"
 import { handleToolCapture } from "./hooks/tool-capture.js"
 import { handleSessionEnd } from "./hooks/session-end.js"
 import { createSearchTool, createAskTool, createStatsTool, createTimelineTool } from "./tools/index.js"
+import { writeSessionInfo, detectSource } from "./utils/session.js"
+import { generateId } from "./utils/helpers.js"
 import type { InjectedContext, Observation } from "./types.js"
 import { debug } from "./utils/helpers.js"
 
@@ -68,6 +70,16 @@ export const OpenCodeBrain: Plugin = async (ctx) => {
         sessionSummaryGenerated = false
         const memoryPath = resolve(directory, ".claude/mind.mv2")
         
+        // Write session info for cross-process session tracking
+        const source = detectSource()
+        const sessionId = `${source}-${generateId()}`
+        try {
+          await writeSessionInfo(directory, sessionId, source)
+          debug(`Session started: ${sessionId}`)
+        } catch (err) {
+          debug(`Failed to write session info: ${err}`)
+        }
+        
         if (existsSync(memoryPath)) {
           try {
             const stats = statSync(memoryPath)
@@ -96,7 +108,7 @@ export const OpenCodeBrain: Plugin = async (ctx) => {
     // Capture tool outputs
     "tool.execute.after": async (input, output) => {
       try {
-        await handleToolCapture(input, output, ensureMind)
+        await handleToolCapture(input, output, ensureMind, directory)
       } catch (err) {
         debug(`Failed to capture tool output for ${input.tool}: ${err}`)
       }

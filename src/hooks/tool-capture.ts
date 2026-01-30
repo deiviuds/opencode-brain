@@ -2,11 +2,13 @@
  * OpenCode Brain - Tool Capture Hook
  * 
  * Captures observations after each tool execution.
- * Uses compression and deduplication for efficient storage.
+ * Uses compression and cross-process deduplication for efficient storage.
  */
 
 import { compressToolOutput } from "../utils/compression.js"
 import { classifyObservationType, debug } from "../utils/helpers.js"
+import { isDuplicateAcrossProcesses } from "../utils/dedup.js"
+import { detectSource, getSessionId } from "../utils/session.js"
 import type { Mind } from "../core/mind.js"
 
 // Tools to observe
@@ -44,42 +46,14 @@ const SKIP_PATTERNS = [
   "<opencode-mind-context>",
 ]
 
-// Deduplication cache
-const recentObservations = new Map<string, number>()
-const DEDUP_WINDOW_MS = 60000
-const CACHE_MAX_SIZE = 100
-const CACHE_STALE_MS = 120000
-
-function getObservationKey(toolName: string, callId: string): string {
-  return `${toolName}:${callId}`
-}
-
-function isDuplicate(key: string): boolean {
-  const lastSeen = recentObservations.get(key)
-  if (!lastSeen) return false
-  return Date.now() - lastSeen < DEDUP_WINDOW_MS
-}
-
-function markObserved(key: string): void {
-  recentObservations.set(key, Date.now())
-  
-  if (recentObservations.size > CACHE_MAX_SIZE) {
-    const now = Date.now()
-    for (const [k, v] of recentObservations.entries()) {
-      if (now - v > CACHE_STALE_MS) {
-        recentObservations.delete(k)
-      }
-    }
-  }
-}
-
 /**
  * Handle tool output capture
  */
 export async function handleToolCapture(
   input: { tool: string; sessionID: string; callID: string },
   output: { title: string; output: string; metadata: Record<string, unknown> },
-  getMind: () => Promise<Mind>
+  getMind: () => Promise<Mind>,
+  directory?: string
 ): Promise<void> {
   const toolName = input.tool.toLowerCase()
   
@@ -88,10 +62,14 @@ export async function handleToolCapture(
     return
   }
   
-  // Dedup check
-  const key = getObservationKey(toolName, input.callID)
-  if (isDuplicate(key)) {
-    debug(`Skipping duplicate: ${toolName}`)
+  // Get directory for dedup
+  const dir = directory || process.env.OPENCODE_DIR || process.cwd()
+  const source = detectSource()
+  
+  // Cross-process deduplication check
+  const toolInput = output.metadata || {}
+  if (await isDuplicateAcrossProcesses(dir, source, toolName, toolInput)) {
+    debug(`Skipping duplicate (cross-process): ${toolName}`)
     return
   }
   
@@ -118,6 +96,9 @@ export async function handleToolCapture(
   // Store with source attribution
   const mind = await getMind()
   
+  // Get persistent session ID
+  const sessionId = await getSessionId(dir, input.sessionID)
+  
   // Compress (respecting config)
   const { compressed, wasCompressed, originalSize } = compressToolOutput(
     toolName,
@@ -136,10 +117,10 @@ export async function handleToolCapture(
       ...(output.metadata || {}),
       compressed: wasCompressed,
       originalSize: wasCompressed ? originalSize : undefined,
-      source: "opencode",
+      sessionId,
+      source,
     },
   })
   
-  markObserved(key)
   debug(`Captured: [${type}] ${output.title || toolName}${wasCompressed ? " (compressed)" : ""}`)
 }

@@ -135,4 +135,76 @@ describe("Mind", () => {
     const stats = await mind.stats()
     expect(stats.totalObservations).toBe(5)
   })
+
+  it("handles concurrent writes without corruption", async () => {
+    const writes = 20
+    const tasks = Array.from({ length: writes }, async (_, i) => {
+      const mind = await Mind.open(testDir)
+      await mind.remember({
+        type: "discovery",
+        summary: `concurrent-${i}`,
+        content: `content-${i}`,
+      })
+    })
+
+    const results = await Promise.allSettled(tasks)
+    const failed = results.filter((r) => r.status === "rejected")
+    expect(failed.length).toBe(0)
+
+    const mind = await Mind.open(testDir)
+    const stats = await mind.stats()
+    expect(stats.totalObservations).toBe(writes)
+  }, 30000)
+
+  it("distinguishes observations by source tool", async () => {
+    // Simulate Claude Code observation
+    const mind1 = await Mind.open(testDir)
+    await mind1.remember({
+      type: "discovery",
+      summary: "Read file.ts",
+      content: "file contents from claude-code",
+      metadata: { source: "claude-code", sessionId: "cc-session-1" },
+    })
+
+    // Simulate OpenCode observation (same file)
+    const mind2 = await Mind.open(testDir)
+    await mind2.remember({
+      type: "discovery",
+      summary: "Read file.ts",
+      content: "file contents from opencode",
+      metadata: { source: "opencode", sessionId: "oc-session-1" },
+    })
+
+    const mind = await Mind.open(testDir)
+    const stats = await mind.stats()
+
+    // Both should be stored (different sources)
+    expect(stats.totalObservations).toBe(2)
+  })
+
+  it("uses consistent session ID when provided", async () => {
+    const sessionId = "test-session-123"
+
+    // Write with explicit sessionId in metadata
+    const mind = await Mind.open(testDir)
+    await mind.remember({
+      type: "discovery",
+      summary: "test with custom session",
+      content: "content with session id",
+      metadata: { sessionId },
+    })
+
+    // Verify observation was stored
+    const stats = await mind.stats()
+    expect(stats.totalObservations).toBe(1)
+  })
+
+  it("allows setSessionId for external tracking", async () => {
+    const mind = await Mind.open(testDir)
+    const originalId = mind.getSessionId()
+    
+    mind.setSessionId("custom-session-id")
+    expect(mind.getSessionId()).toBe("custom-session-id")
+    expect(mind.getSessionId()).not.toBe(originalId)
+  })
 })
