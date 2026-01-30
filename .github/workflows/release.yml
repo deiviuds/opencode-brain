@@ -49,31 +49,8 @@ jobs:
         with:
           generate_release_notes: true
           body: |
-            ## Installation
-
-            ```bash
-            npm install opencode-brain
-            ```
-
-            Add to your `opencode.json`:
-            ```json
-            {
-              "plugin": ["opencode-brain"]
-            }
-            ```
-
             ## What's New
 
             See [CHANGELOG.md](https://github.com/deiviuds/opencode-brain/blob/main/CHANGELOG.md) for details.
-
-            ## Documentation
-
-            - [README](https://github.com/deiviuds/opencode-brain#readme)
-            - [Contributing Guide](https://github.com/deiviuds/opencode-brain/blob/main/CONTRIBUTING.md)
-
-            ## Cross-Tool Compatibility
-
-            This plugin is 100% compatible with [claude-brain](https://github.com/memvid/claude-brain).
-            Both tools share the same `.claude/mind.mv2` file.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

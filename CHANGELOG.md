@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-01-30
+
+### Fixed
+- Race condition in parallel tool hooks that could corrupt mind.mv2 file
+- Re-open memvid inside lock for every write to ensure fresh SDK state
+
+### Added
+- Cross-process deduplication (`src/utils/dedup.ts`) to prevent duplicate observations from parallel hooks
+- Session persistence (`src/utils/session.ts`) for consistent session IDs across hook invocations
+- Source tracking to distinguish opencode vs claude-code observations
+- Unit tests for dedup and session utilities (18 new tests)
+
 ## [1.0.0] - 2026-01-29
 
 ### Added
@@ -45,4 +57,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tool capture with configurable compression
 - LMDB-based storage via memvid
 
+[1.1.0]: https://github.com/deiviuds/opencode-brain/releases/tag/v1.1.0
 [1.0.0]: https://github.com/deiviuds/opencode-brain/releases/tag/v1.0.0
